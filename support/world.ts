@@ -1,5 +1,5 @@
 import { setWorldConstructor, World as CucumberWorld, IWorldOptions } from '@cucumber/cucumber';
-import { Browser, BrowserContext, Page, chromium, APIResponse } from 'playwright';
+import { Browser, BrowserContext, Page, APIResponse } from 'playwright';
 import { APIRequestContext } from 'playwright';
 
 export interface TestState {
@@ -8,6 +8,9 @@ export interface TestState {
   testName: string;
   accessToken: string | null;
   articleId: string | null;
+  quizId: string | null;
+  quizCategoryId: string | null;
+  quizDate: string | null;
   lastResponse: APIResponse | null;
 }
 
@@ -26,6 +29,9 @@ export class World extends CucumberWorld {
       testName: 'E2E Tester',
       accessToken: null,
       articleId: null,
+      quizId: null,
+      quizCategoryId: null,
+      quizDate: null,
       lastResponse: null,
     };
   }

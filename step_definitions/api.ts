@@ -22,10 +22,6 @@ Given('I have a valid access token', function (this: World) {
   assert.ok(this.state.accessToken, 'accessToken should be set');
 });
 
-Given('an article exists in the system', function (this: World) {
-  assert.ok(this.state.articleId, 'articleId should be set');
-});
-
 // --- When: Auth API ---
 
 When('I call the backend health endpoint', async function (this: World) {

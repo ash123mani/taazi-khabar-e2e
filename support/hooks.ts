@@ -1,41 +1,32 @@
 import { BeforeAll, AfterAll, Before, After, Status, setDefaultTimeout } from '@cucumber/cucumber';
-
-setDefaultTimeout(30000);
 import { chromium, request as playwrightRequest } from 'playwright';
 import { World } from './world';
+
+setDefaultTimeout(30000);
 
 const BE_BASE = 'http://localhost:8000';
 const FE_BASE = 'http://localhost:3000';
 
-let browser: Awaited<ReturnType<typeof chromium.launch>>;
 let apiCtx: Awaited<ReturnType<typeof playwrightRequest.newContext>>;
 
 BeforeAll(async function () {
-  browser = await chromium.launch({
-    headless: !process.env.HEADED,
-  });
   apiCtx = await playwrightRequest.newContext({ baseURL: BE_BASE });
 });
 
 AfterAll(async function () {
-  if (apiCtx) await apiCtx.dispose();
-  if (browser) await browser.close();
+  if (apiCtx) await apiCtx.dispose().catch(() => {});
 });
 
 Before(async function (this: World) {
-  const context = await browser.newContext({ baseURL: FE_BASE });
-  const page = await context.newPage();
-  this.context = context;
-  this.page = page;
-  this.browser = browser;
   this.apiContext = apiCtx;
 
-  // Reset per-scenario state
   this.state.accessToken = null;
   this.state.articleId = null;
+  this.state.quizId = null;
+  this.state.quizCategoryId = null;
+  this.state.quizDate = null;
   this.state.testEmail = `e2e-${Date.now()}${Math.random().toString(36).slice(2, 6)}@test.com`;
 
-  // Register a fresh user for this scenario
   const res = await apiCtx.post('/api/auth/register', {
     data: {
       email: this.state.testEmail,
@@ -48,13 +39,22 @@ Before(async function (this: World) {
     this.state.accessToken = body.access_token;
   }
 
-  // Fetch an article ID for article detail tests
   const articlesRes = await apiCtx.get('/api/articles?limit=1');
   if (articlesRes.ok()) {
     const body = await articlesRes.json();
     const list = Array.isArray(body) ? body : body.articles ?? [];
     if (list.length > 0) this.state.articleId = list[0].id;
   }
+
+  const browser = await chromium.launch({
+    headless: !process.env.HEADED,
+    args: ['--disable-dev-shm-usage', '--no-sandbox', '--disable-gpu'],
+  });
+  const context = await browser.newContext({ baseURL: FE_BASE });
+  const page = await context.newPage();
+  this.browser = browser;
+  this.context = context;
+  this.page = page;
 });
 
 After(async function (this: World, scenario) {
@@ -65,4 +65,5 @@ After(async function (this: World, scenario) {
     } catch {}
   }
   if (this.context) await this.context.close().catch(() => {});
+  if (this.browser) await this.browser.close().catch(() => {});
 });
