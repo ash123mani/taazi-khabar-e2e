@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { BasePage } from './base.page';
+import { BasePage } from '../core/base.page';
 
 export class BookmarksPage extends BasePage {
   constructor(page: Page) {
@@ -10,23 +10,19 @@ export class BookmarksPage extends BasePage {
   get emptyMessage() { return this.page.getByText('No bookmarks yet').first(); }
   get articleCards() { return this.page.locator('.newspaper-heading').filter({ hasNotText: /Clippings|Reading List|Taazi Khabar/ }); }
 
-  async navigate() {
+  async navigate(): Promise<void> {
     await this.goto('/bookmarks');
   }
 
-  async assertHeadingVisible() {
-    await expect(this.heading).toBeVisible({ timeout: 10000 });
-  }
-
-  async assertEmptyState() {
+  async assertEmptyState(): Promise<void> {
     await expect(this.emptyMessage).toBeVisible({ timeout: 10000 });
   }
 
-  async assertBookmarkItemsExist() {
+  async assertItemsExist(): Promise<void> {
     await expect(this.articleCards.first()).toBeVisible({ timeout: 10000 });
   }
 
-  async assertBookmarkCount(expected: number) {
+  async assertCount(expected: number): Promise<void> {
     const count = await this.articleCards.count();
     expect(count).toBe(expected);
   }

@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { BasePage } from './base.page';
+import { BasePage } from '../core/base.page';
 
 export class ArticlePage extends BasePage {
   constructor(page: Page) {
@@ -7,62 +7,38 @@ export class ArticlePage extends BasePage {
   }
 
   get headline() { return this.page.locator('h1').first(); }
-  get body() { return this.page.locator('p').first(); }
   get sourceLabel() { return this.page.locator('[style*="font-weight:700"],[style*="font-weight: 700"]').first(); }
-  get bookmarkButton() { return this.page.locator('[aria-label="bookmark"], button:has(.anticon-heart)').first(); }
-  get loginPrompt() { return this.page.getByText(/log in to bookmark/i); }
-  get syllabusTags() { return this.page.locator('.ant-tag'); }
-  get publishedDate() { return this.page.getByText(/\d{1,2}\s+\w+\s+\d{4}/).first(); }
+  get publishedDate() { return this.page.getByText(/\d{2}-\d{2}-\d{4}/).first(); }
 
-  async navigate(articleId: string) {
+  async navigate(articleId: string): Promise<void> {
     await this.goto(`/article/${articleId}`);
   }
 
-  async assertHeadlineVisible() {
+  async assertHeadlineVisible(): Promise<void> {
     await expect(this.headline).toBeVisible({ timeout: 10000 });
   }
 
-  async assertBodyVisible() {
-    await expect(this.body).toBeVisible({ timeout: 5000 });
+  async assertBodyVisible(): Promise<void> {
+    await expect(this.page.locator('p').first()).toBeVisible({ timeout: 5000 });
   }
 
-  async assertSourceVisible() {
+  async assertSourceVisible(): Promise<void> {
     await expect(this.sourceLabel).toBeVisible();
   }
 
-  async assertDateVisible() {
-    await expect(this.publishedDate).toBeVisible();
+  async assertDateVisible(): Promise<void> {
+    await expect(this.page.getByText(/\d{1,2}\s+\w+\s+\d{4}/).first()).toBeVisible();
   }
 
-  async assertBookmarkButtonVisible() {
-    await expect(this.bookmarkButton).toBeVisible();
-  }
-
-  async clickBookmark() {
-    await this.bookmarkButton.click();
-  }
-
-  async assertBookmarked() {
-    await expect(this.page.locator('.anticon-heart-filled, .anticon-heart[style*="color: #ef4444"]')).toBeVisible();
-  }
-
-  async assertNotBookmarked() {
-    const filled = await this.page.locator('.anticon-heart-filled').count();
-    expect(filled).toBe(0);
-  }
-
-  async assertLoginPromptVisible() {
-    await expect(this.loginPrompt).toBeVisible({ timeout: 5000 });
-  }
-
-  async assertSyllabusTagsExist() {
-    const count = await this.syllabusTags.count();
+  async assertSyllabusTagsExist(): Promise<void> {
+    const tags = this.page.locator('.ant-tag');
+    const count = await tags.count();
     if (count > 0) {
-      await expect(this.syllabusTags.first()).toBeVisible();
+      await expect(tags.first()).toBeVisible();
     }
   }
 
-  async assertSourceColorCoded() {
+  async assertSourceColorCoded(): Promise<void> {
     const style = await this.sourceLabel.getAttribute('style') || '';
     expect(style).toMatch(/color/);
   }
